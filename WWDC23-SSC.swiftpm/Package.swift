@@ -20,7 +20,7 @@ let package = Package(
             teamIdentifier: "AK63LT6QFU",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .beachball),
+            appIcon: .placeholder(icon: .plane),
             accentColor: .presetColor(.blue),
             supportedDeviceFamilies: [
                 .pad,
@@ -31,13 +31,17 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
-            ]
+            ],
+            appCategory: .actionGames
         )
     ],
     targets: [
         .executableTarget(
             name: "AppModule",
-            path: "."
+            path: ".",
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )
