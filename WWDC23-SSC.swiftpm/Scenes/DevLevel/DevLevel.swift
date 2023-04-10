@@ -15,6 +15,8 @@ class DevLevel: DevLevelDesign {
     
     let music = SKAudioNode(fileNamed: "tenshi.mp3")
     
+    let spawner = BulletSpawner()
+    
     override func didMove(to view: SKView) {
         super.didMove(to: view)
         
@@ -30,12 +32,17 @@ class DevLevel: DevLevelDesign {
         magic.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
         addChild(magic)
         
-        let test = SKNode()
-        test.physicsBody = SKPhysicsBody(circleOfRadius: 25)
-        test.physicsBody?.allowsRotation = false
-        test.physicsBody?.isDynamic = false
-        addChild(test)
+        player.addChild(spawner)
         
+//        magic.physicsBody = SKPhysicsBody(circleOfRadius: 50)
+//        magic.physicsBody?.allowsRotation = false
+//        magic.physicsBody?.affectedByGravity = false
+//        magic.physicsBody?.applyForce(CGVector(dx: 0, dy: -25))
+//        magic.physicsBody?.velocity = CGVector(dx: 3, dy: 0)
+//        magic.physicsBody?.applyImpulse(CGVector(dx: 50, dy: 0))
+//        magic.run(.applyImpulse(CGVector(dx: 0, dy: -50), at: player.position, duration: 3))
+//        magic.run(.applyImpulse(CGVector(dx: 0, dy: -50), duration: 3))
+//        magic.run(.applyForce(CGVector(dx: 0, dy: -50), duration: 3))
 //        magic.run(.playSoundFileNamed("magiccircle.wav", waitForCompletion: false))
     }
     
@@ -62,6 +69,7 @@ class DevLevel: DevLevelDesign {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        
+        spawner.updateSpawnerPosition(follow: player)
+        spawner.update()
     }
 }
