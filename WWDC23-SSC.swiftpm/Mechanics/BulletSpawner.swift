@@ -9,26 +9,28 @@ import Foundation
 import SpriteKit
 
 class BulletSpawner: SKNode {
+    let sprite: SKTexture
+    
     // Arrays
     var bulletArray: [Bullet] = []
     var patternArrays = 2
     var bulletsPerArray = 10
     
     // Angle Variables
-    var spreadBetweenArray = 180
+    var spreadBetweenArray = 300 //180
     var spreadWithinArray = 90
     var startAngle = 0
     var defaultAngle = 0
     
     // Spinning Variables
     var beginSpinSpeed = 0
-    var spinRate = 0
+    var spinRate = 1
     var spinModificator = 0
     var invertSpin = 1
     var maxSpinRate = 10
     
     // Fire Rate Variables
-    var fireRate = 10
+    var fireRate = 25
     var shoot = 0
     
     // Offsets
@@ -40,8 +42,17 @@ class BulletSpawner: SKNode {
     // Bullet Variables
     var bulletSpeed = 3
     var bulletAcceleration = 0
-    var bulletCurve = 0.2
+    var bulletCurve = 0.0
     var bulletTTL: TimeInterval = 10 // Seconds
+    
+    init(sprite: SKTexture) {
+        self.sprite = sprite
+        super.init()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     func update() {
         var bulletLength = bulletsPerArray - 1
@@ -99,7 +110,7 @@ class BulletSpawner: SKNode {
         let x1 = xOffset + self.lengthDirX(dist: objectWidth, angle: CGFloat(angleCalc))
         let y1 = yOffset + self.lengthDirY(dist: objectHeight, angle: CGFloat(angleCalc))
                 
-        let bullet = Bullet(sprite: SKSpriteNode(imageNamed: "bullet"), spawnX: CGFloat(x1), spawnY: CGFloat(y1), travelSpeed: bulletSpeed, acceleration: bulletAcceleration, direction: CGFloat(angleCalc), curve: bulletCurve, timeBeforeDespawn: bulletTTL)
+        let bullet = Bullet(sprite: SKSpriteNode(texture: self.sprite), spawnX: CGFloat(x1), spawnY: CGFloat(y1), travelSpeed: bulletSpeed, acceleration: bulletAcceleration, direction: CGFloat(angleCalc), curve: bulletCurve, timeBeforeDespawn: bulletTTL)
         
         guard let scene = self.scene else { print("ERROR: Failed to find Scene."); return }
         bullet.spawn(scene: scene)

@@ -15,7 +15,7 @@ class DevLevel: DevLevelDesign {
     
     let music = SKAudioNode(fileNamed: "tenshi.mp3")
     
-    let spawner = BulletSpawner()
+    let spawner = BulletSpawner(sprite: SKTexture(imageNamed: "bullet"))
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
@@ -24,6 +24,7 @@ class DevLevel: DevLevelDesign {
         player.position.y = -self.frame.height / 4
         addChild(player)
         
+        magic.position.y = 350
         magic.size = CGSize(width: 200, height: 200)
         magic.alpha = 0.5
         magic.color = .red
@@ -32,18 +33,14 @@ class DevLevel: DevLevelDesign {
         magic.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
         addChild(magic)
         
-        player.addChild(spawner)
+        let moveToA = SKAction.moveTo(x: -250, duration: 1.25)
+        moveToA.timingMode = .easeOut
+        let moveToB = SKAction.moveTo(x: 250, duration: 1.25)
+        moveToB.timingMode = .easeOut
         
-//        magic.physicsBody = SKPhysicsBody(circleOfRadius: 50)
-//        magic.physicsBody?.allowsRotation = false
-//        magic.physicsBody?.affectedByGravity = false
-//        magic.physicsBody?.applyForce(CGVector(dx: 0, dy: -25))
-//        magic.physicsBody?.velocity = CGVector(dx: 3, dy: 0)
-//        magic.physicsBody?.applyImpulse(CGVector(dx: 50, dy: 0))
-//        magic.run(.applyImpulse(CGVector(dx: 0, dy: -50), at: player.position, duration: 3))
-//        magic.run(.applyImpulse(CGVector(dx: 0, dy: -50), duration: 3))
-//        magic.run(.applyForce(CGVector(dx: 0, dy: -50), duration: 3))
-//        magic.run(.playSoundFileNamed("magiccircle.wav", waitForCompletion: false))
+        magic.run(.repeatForever(.sequence([moveToA, .wait(forDuration: 3), moveToB, .wait(forDuration: 3)])))
+        
+        player.addChild(spawner)
     }
     
     override func sceneDidLoad() {
@@ -69,7 +66,7 @@ class DevLevel: DevLevelDesign {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        spawner.updateSpawnerPosition(follow: player)
+        spawner.updateSpawnerPosition(follow: magic)
         spawner.update()
     }
 }
