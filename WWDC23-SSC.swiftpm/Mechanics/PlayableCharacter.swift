@@ -12,6 +12,8 @@ class PlayableCharacter: SKSpriteNode {
     let atlas: SKTextureAtlas = SKTextureAtlas(named: "PlayableCharacter")
     let hitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 7.5)
     let visualHitbox: SKShapeNode = SKShapeNode(circleOfRadius: 7.5)
+    let graze: SKNode = SKNode()
+    let grazeHitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 25)
     
     var isBeingControlled: Bool
     
@@ -20,6 +22,7 @@ class PlayableCharacter: SKSpriteNode {
         self.hitbox.isDynamic = false
         self.hitbox.allowsRotation = false
         self.hitbox.affectedByGravity = false
+        self.hitbox.contactTestBitMask = 3
         
         super.init(texture: atlas.textureNamed("player1"), color: .blue, size: CGSize(width: 50, height: 50))
         
@@ -31,6 +34,14 @@ class PlayableCharacter: SKSpriteNode {
         self.visualHitbox.glowWidth = 1
         self.visualHitbox.zPosition = 1
         self.addChild(visualHitbox)
+        
+        self.graze.name = "playerGraze"
+        self.addChild(self.graze)
+        self.grazeHitbox.isDynamic = false
+        self.grazeHitbox.allowsRotation = false
+        self.grazeHitbox.affectedByGravity = false
+        self.grazeHitbox.contactTestBitMask = 4
+        self.graze.physicsBody = self.grazeHitbox
     }
     
     required init?(coder aDecoder: NSCoder) {

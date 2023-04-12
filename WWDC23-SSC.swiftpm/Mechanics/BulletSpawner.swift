@@ -8,46 +8,61 @@
 import Foundation
 import SpriteKit
 
-class BulletSpawner: SKNode {
-    let sprite: SKTexture
+class BulletSpawner: SKNode, Scriptable {
+    let texture: SKTexture
     
     // Arrays
-    var bulletArray: [Bullet] = []
-    var patternArrays = 2
-    var bulletsPerArray = 10
+    var bulletArray: [Bullet] = []  // All bullets spawned and still alive
+    var patternArrays = 1           // Total bullet arrays
+    var bulletsPerArray = 1         // How many bullets each array will shoot
     
     // Angle Variables
-    var spreadBetweenArray = 300 //180
-    var spreadWithinArray = 90
-    var startAngle = 0
-    var defaultAngle = 0
+    var spreadBetweenArray = 300    // Spread between Arrays
+    var spreadWithinArray = 90      // Bullet spread in an Array
+    var startAngle = 0.0            // Starting angle (➡️ 0 | ⬇️ 90 | ⬅️ 180 | ⬆️ 270)
+    var defaultAngle = 0.0
     
     // Spinning Variables
-    var beginSpinSpeed = 0
-    var spinRate = 1
-    var spinModificator = 0
-    var invertSpin = 1
-    var maxSpinRate = 10
+    var spinRate = 0.0              // Rate at which the pattern spins
+    var spinModificator = 0.0       // Spin modifier
+    var invertSpin = true           // If true, spinRate gets inverted when it goes over maxSpinRate
+    var maxSpinRate = 10.0          // Complementary to invertSpin; if spinRate >= maxSpinRate then invert spin
     
     // Fire Rate Variables
-    var fireRate = 25
-    var shoot = 0
+    var fireRate = 5                // How fast the spawner shoots bullets; Higher is slower
+    var shoot = 0                   // Auxiliary variable
     
     // Offsets
-    var objectWidth = 0
-    var objectHeight = 0
-    var xOffset = 0.0
-    var yOffset = 0.0
+    var objectWidth = 0.0           // Width of the bullet firing object
+    var objectHeight = 0.0          // Height of the bullet firing object
+    var xOffset = 0.0               // Shift spawn point of the bullets along the X-Axis
+    var yOffset = 0.0               // Shift spawn point of the bullets along the Y-Axis
     
     // Bullet Variables
-    var bulletSpeed = 3
-    var bulletAcceleration = 0
+    var bulletSpeed = 3.0
+    var bulletAcceleration = 0.0
     var bulletCurve = 0.0
-    var bulletTTL: TimeInterval = 10 // Seconds
+    var bulletTTL: TimeInterval = 10 // How long the bullet will live, in seconds, before despawning
     
-    init(sprite: SKTexture) {
-        self.sprite = sprite
+    init(config: BulletSpawnerConfigs) {
+        self.texture = config.texture
         super.init()
+        self.patternArrays = config.patternArrays
+        self.bulletsPerArray = config.bulletsPerArray
+        self.spreadBetweenArray = config.spreadBetweenArray
+        self.spreadWithinArray = config.spreadWithinArray
+        self.startAngle = config.startAngle
+        self.spinRate = config.spinRate
+        self.spinModificator = config.spinModificator
+        self.invertSpin = config.invertSpin
+        self.maxSpinRate = config.maxSpinRate
+        self.fireRate = config.fireRate
+        self.objectWidth = config.objectWidth
+        self.objectHeight = config.objectHeight
+        self.bulletSpeed = config.bulletSpeed
+        self.bulletAcceleration = config.bulletAcceleration
+        self.bulletCurve = config.bulletCurve
+        self.bulletTTL = config.bulletTTL
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -67,15 +82,15 @@ class BulletSpawner: SKNode {
         if shoot == 0 {
             for i in 0..<patternArrays {
                 for j in 0..<bulletsPerArray {
-                    calculation(i: i, j: j, arrayAngle: arrayAngle, bulletAngle: bulletAngle)
+                    calculation(i: i, j: j, arrayAngle: CGFloat(arrayAngle), bulletAngle: CGFloat(bulletAngle))
                 }
             }
             
-            if defaultAngle > 360 { defaultAngle = 0}
+            if defaultAngle > 360 { defaultAngle = 0 }
             defaultAngle += spinRate
             spinRate += spinModificator
             
-            if invertSpin == 1 {
+            if invertSpin {
                 if spinRate < -maxSpinRate || spinRate > maxSpinRate {
                     spinModificator = -spinModificator
                 }
@@ -97,20 +112,20 @@ class BulletSpawner: SKNode {
             shoot = 0
         }
         
-        print(bulletArray.count)
+//        print(bulletArray.count)
     }
     
     // Calculate directions of spawning points
     
-    func calculation(i: Int, j: Int, arrayAngle: Int, bulletAngle: Int) {
-        var angleCalc = defaultAngle + (bulletAngle * i)
-        angleCalc += (arrayAngle * j)
+    func calculation(i: Int, j: Int, arrayAngle: CGFloat, bulletAngle: CGFloat) {
+        var angleCalc = defaultAngle + (bulletAngle * CGFloat(i))
+        angleCalc += (arrayAngle * CGFloat(j))
         angleCalc += startAngle
         
-        let x1 = xOffset + self.lengthDirX(dist: objectWidth, angle: CGFloat(angleCalc))
-        let y1 = yOffset + self.lengthDirY(dist: objectHeight, angle: CGFloat(angleCalc))
+        let x1 = xOffset + self.lengthDirX(dist: objectWidth, angle: angleCalc)
+        let y1 = yOffset + self.lengthDirY(dist: objectHeight, angle: angleCalc)
                 
-        let bullet = Bullet(sprite: SKSpriteNode(texture: self.sprite), spawnX: CGFloat(x1), spawnY: CGFloat(y1), travelSpeed: bulletSpeed, acceleration: bulletAcceleration, direction: CGFloat(angleCalc), curve: bulletCurve, timeBeforeDespawn: bulletTTL)
+        let bullet = Bullet(sprite: SKSpriteNode(texture: self.texture), spawnX: x1, spawnY: y1, travelSpeed: bulletSpeed, acceleration: bulletAcceleration, direction: angleCalc, curve: bulletCurve, timeBeforeDespawn: bulletTTL)
         
         guard let scene = self.scene else { print("ERROR: Failed to find Scene."); return }
         bullet.spawn(scene: scene)
@@ -120,12 +135,12 @@ class BulletSpawner: SKNode {
     
     // Trigonometry functions
     
-    func lengthDirX (dist: Int, angle: CGFloat) -> CGFloat {
-        return CGFloat(dist) * cos((angle * .pi) / 180)
+    func lengthDirX (dist: CGFloat, angle: CGFloat) -> CGFloat {
+        return dist * cos((angle * .pi) / 180)
     }
     
-    func lengthDirY (dist: Int, angle: CGFloat) -> CGFloat {
-        return CGFloat(dist) * -sin((angle * .pi) / 180)
+    func lengthDirY (dist: CGFloat, angle: CGFloat) -> CGFloat {
+        return dist * -sin((angle * .pi) / 180)
     }
     
     // Follow entity

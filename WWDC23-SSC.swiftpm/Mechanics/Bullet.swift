@@ -14,9 +14,9 @@ class Bullet: SKNode {
     
 //    var spawnX: CGFloat
 //    var spawnY: CGFloat
-    var travelSpeed: Int
+    var travelSpeed: CGFloat
     var direction: CGFloat
-    var acceleration: Int
+    var acceleration: CGFloat
     var curve: CGFloat
     var dirX: CGFloat
     var dirY: CGFloat
@@ -24,7 +24,7 @@ class Bullet: SKNode {
     
     var despawn: Bool
     
-    init(sprite: SKSpriteNode, spawnX: CGFloat, spawnY: CGFloat, travelSpeed: Int, acceleration: Int, direction: CGFloat, curve: CGFloat, timeBeforeDespawn: TimeInterval) {
+    init(sprite: SKSpriteNode, spawnX: CGFloat, spawnY: CGFloat, travelSpeed: CGFloat, acceleration: CGFloat, direction: CGFloat, curve: CGFloat, timeBeforeDespawn: TimeInterval) {
         self.sprite = sprite
         self.hitbox = SKPhysicsBody(circleOfRadius: sprite.size.width * 0.25)
         
@@ -70,20 +70,20 @@ class Bullet: SKNode {
         self.dirX = Bullet.xDir(angle: self.direction)
         self.dirY = Bullet.yDir(angle: self.direction)
         
-        self.position.x = (self.position.x + self.dirX * CGFloat(self.travelSpeed))
-        self.position.y = (self.position.y + self.dirY * CGFloat(self.travelSpeed))
+        self.position.x = (self.position.x + self.dirX * self.travelSpeed)
+        self.position.y = (self.position.y + self.dirY * self.travelSpeed)
         
         if self.position.x > 400 || self.position.x < -400 { self.despawn = true }
         if self.position.y > 500 || self.position.y < -500 { self.despawn = true }
     }
     
     static func xDir(angle: CGFloat) -> CGFloat {
-        let radians = angle * .pi / 100
+        let radians = angle * .pi / 180
         return cos(radians)
     }
     
     static func yDir(angle: CGFloat) -> CGFloat {
-        let radians = angle * .pi / 100
+        let radians = angle * .pi / 180
         return -sin(radians)
     }
 }
