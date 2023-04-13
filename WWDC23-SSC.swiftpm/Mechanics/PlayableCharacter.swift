@@ -100,7 +100,30 @@ class PlayableCharacter: SKSpriteNode {
                                                                      bulletAcceleration: 0,
                                                                      bulletCurve: 0,
                                                                      bulletTTL: 5))
+
+        
+        let starSpawner = BulletSpawner(config: BulletSpawnerConfigs(texture: bullets.textureNamed("bulletStar"),
+                                                                     spriteSpin: .clockwise,
+                                                                     ownerisPlayer: true,
+                                                                     patternArrays: 1,
+                                                                     bulletsPerArray: 2,
+                                                                     spreadBetweenArray: 0,
+                                                                     spreadWithinArray: 10,
+                                                                     startAngle: 265,
+                                                                     spinRate: 0,
+                                                                     spinModificator: 0,
+                                                                     invertSpin: true,
+                                                                     maxSpinRate: 1,
+                                                                     fireRate: 3,
+                                                                     objectWidth: 100,
+                                                                     objectHeight: 1,
+                                                                     bulletSpeed: 25,
+                                                                     bulletAcceleration: 0,
+                                                                     bulletCurve: 0,
+                                                                     bulletTTL: 5))
         self.spawners.append(mainSpawner)
         self.addChild(mainSpawner)
+        self.spawners.append(starSpawner)
+        self.addChild(starSpawner)
     }
 }

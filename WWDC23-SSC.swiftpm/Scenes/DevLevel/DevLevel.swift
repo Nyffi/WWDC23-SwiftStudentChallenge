@@ -176,50 +176,60 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
 //            print("hit an enemy")
 //        }
         
-        if contact.bodyA.categoryBitMask == Bitmasks.eBullet.rawValue {
-            if contact.bodyB.categoryBitMask == Bitmasks.playerGraze.rawValue {
-                graze += 1
-                score += 10
-            }
-        } else if contact.bodyB.categoryBitMask == Bitmasks.eBullet.rawValue {
-            if contact.bodyA.categoryBitMask == Bitmasks.playerGraze.rawValue {
-                graze += 1
-                score += 10
+        DispatchQueue.main.async {
+            if contact.bodyA.categoryBitMask == Bitmasks.eBullet.rawValue {
+                if contact.bodyB.categoryBitMask == Bitmasks.playerGraze.rawValue {
+                    self.graze += 1
+                    self.score += 10
+                    
+                    return
+                }
+            } else if contact.bodyB.categoryBitMask == Bitmasks.eBullet.rawValue {
+                if contact.bodyA.categoryBitMask == Bitmasks.playerGraze.rawValue {
+                    self.graze += 1
+                    self.score += 10
+                    
+                    return
+                }
             }
         }
         
-        if contact.bodyA.categoryBitMask == Bitmasks.pBullet.rawValue {
-            if let bullet = contact.bodyA.node as? Bullet {
-                bullet.despawn = true
-            }
-            
-            if let fairy = contact.bodyB.node as? Fairy {
-                fairy.health -= 1
-                score += 10
-                if fairy.health <= 0 {
-                    fairy.removeFromParent()
-                    fairy.isActive = false
-                    fairy.skillClass == .light ? (score += 100) : (score += 500)
+        DispatchQueue.main.async {
+            if contact.bodyA.categoryBitMask == Bitmasks.pBullet.rawValue {
+                if let bullet = contact.bodyA.node as? Bullet {
+                    bullet.despawn = true
                 }
-            }
-            
-            return
-        } else if contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue {
-            if let bullet = contact.bodyA.node as? Bullet {
-                bullet.despawn = true
-            }
-            
-            if let fairy = contact.bodyA.node as? Fairy {
-                fairy.health -= 1
-                score += 10
-                if fairy.health <= 0 {
-                    fairy.removeFromParent()
-                    fairy.isActive = false
-                    fairy.skillClass == .light ? (score += 100) : (score += 500)
+                
+                if let fairy = contact.bodyB.node as? Fairy {
+                    fairy.health -= 1
+                    self.score += 10
+                    if fairy.health <= 0 {
+                        fairy.removeFromParent()
+                        fairy.isActive = false
+                        fairy.skillClass == .light ? (self.score += 100) : (self.score += 500)
+                    }
                 }
+                
+                return
+            } else if contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue {
+                if let bullet = contact.bodyA.node as? Bullet {
+                    bullet.despawn = true
+                }
+                
+                if let fairy = contact.bodyA.node as? Fairy {
+                    fairy.health -= 1
+                    self.score += 10
+                    if fairy.health <= 0 {
+                        fairy.removeFromParent()
+                        fairy.isActive = false
+                        fairy.skillClass == .light ? (self.score += 100) : (self.score += 500)
+                    }
+                }
+                
+                return
             }
-            
-            return
         }
+        
+        
     }
 }

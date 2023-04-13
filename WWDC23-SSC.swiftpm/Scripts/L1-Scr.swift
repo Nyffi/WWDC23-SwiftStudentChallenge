@@ -76,7 +76,7 @@ class LevelOneScript: SKNode {
     
     func initializeEnemies() {
         var auxX = -320
-        var auxY = 160
+        var auxY = 180
         
         for i in 0..<3 {
             for j in 0..<9 {
