@@ -20,6 +20,7 @@ class Fairy: SKNode, Enemy {
     
     var skillClass: FairyClass
     var sprite: SKSpriteNode
+    var hitbox: SKPhysicsBody
     
     init(fairy: FairyClass, pos: CGPoint) {
         spawners = [:]
@@ -32,9 +33,18 @@ class Fairy: SKNode, Enemy {
         skillClass = fairy
         finalSpot = pos
         sprite = SKSpriteNode(color: .magenta, size: CGSize(width: 25, height: 40))
+        
+        hitbox = SKPhysicsBody(circleOfRadius: self.sprite.size.width * 0.5)
+        hitbox.affectedByGravity = false
+        hitbox.allowsRotation = false
+        hitbox.isDynamic = false
+        hitbox.categoryBitMask = Bitmasks.enemy.rawValue
+        hitbox.contactTestBitMask = Bitmasks.pBullet.rawValue
+        
         super.init()
         setMaxHealth(hp: skillClass == .light ? 20 : 60)
         addChild(sprite)
+        self.physicsBody = hitbox        
     }
     
     required init?(coder aDecoder: NSCoder) {

@@ -9,27 +9,35 @@ import Foundation
 import SpriteKit
 
 struct BulletSpawnerConfigs {
-    let texture: SKTexture
+    var texture: SKTexture
+    let spriteSpin: SpriteSpin
+    let ownerisPlayer: Bool
     
     let patternArrays: Int
     let bulletsPerArray: Int
     
-    let spreadBetweenArray: Int
-    let spreadWithinArray: Int
+    var spreadBetweenArray: Int
+    var spreadWithinArray: Int
     let startAngle: CGFloat
     
     let spinRate: CGFloat
-    let spinModificator: CGFloat
+    var spinModificator: CGFloat
     let invertSpin: Bool
     let maxSpinRate: CGFloat
     
-    let fireRate: Int
+    var fireRate: Int
     
     let objectWidth: CGFloat
     let objectHeight: CGFloat
     
-    let bulletSpeed: CGFloat
-    let bulletAcceleration: CGFloat
-    let bulletCurve: CGFloat
-    let bulletTTL: TimeInterval
+    var bulletSpeed: CGFloat
+    var bulletAcceleration: CGFloat
+    var bulletCurve: CGFloat
+    var bulletTTL: TimeInterval
+}
+
+enum SpriteSpin {
+    case none
+    case clockwise
+    case counterclockwise
 }

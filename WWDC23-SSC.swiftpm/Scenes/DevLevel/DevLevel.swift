@@ -9,6 +9,8 @@ import Foundation
 import SpriteKit
 
 class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
+    let bulletAtlas = SKTextureAtlas(named: "bulletVariants")
+    
     let player = PlayableCharacter()
     
     let magic = SKSpriteNode(imageNamed: "magicCircle")
@@ -19,10 +21,17 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     
     let script = LevelOneScript()
     
+    var score = 0
+    var topScore = 0
+    var graze = 0
+    
     override func didMove(to view: SKView) {
         super.didMove(to: view)
-        
         physicsWorld.contactDelegate = self
+        
+        script.updateTextures(bulletAtlas: bulletAtlas)
+        script.initializeEnemies()
+        player.initalizeSpawners(bullets: bulletAtlas)
         
         player.isUserInteractionEnabled = true
         player.position.y = -self.frame.height / 4
@@ -50,6 +59,9 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
 //                                            .run { self.script.spawnEnemy(type: .fairyLight) }])))
         player.addChild(spawner)
         
+//        guard let gameScene = self else { print("SCENE WAS NOT ACHIEVABLE"); return }
+//        script.gameScene = self
+//        script.initializeEnemies()
         addChild(script)
     }
     
@@ -57,7 +69,11 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         addChild(music)
         music.autoplayLooped = true
         
-        script.spawnEnemy(quantity: 1)
+        script.activateSpawn()
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//            self.script.deactivateSpawn()
+//        }
+//        script.spawnEnemy(quantity: 1)
 //        self.spawnerTestSetup()
     }
     
@@ -79,14 +95,30 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        print("Score: \(score)")
+        print("Graze: \(graze)")
 //        spawner.updateSpawnerPosition(follow: magic)
 //        spawner.update()
-        for enemy in script.fairies {
-            if enemy.isActive && enemy.canShoot {
-                for spawner in enemy.spawners {
-                    spawner.value.updateSpawnerPosition(follow: enemy)
-                    spawner.value.update()
+        
+        DispatchQueue.main.async {
+            for enemy in self.script.fairies {
+                if enemy.isActive && enemy.canShoot {
+                    for spawner in enemy.spawners {
+                        spawner.value.updateSpawnerPosition(follow: enemy)
+                        spawner.value.update()
+                    }
+                } else {
+                    for spawner in enemy.spawners {
+                        spawner.value.updateWhileAway()
+                    }
                 }
+            }
+        }
+        
+        DispatchQueue.main.async {
+            for spawner in self.player.spawners {
+                spawner.updateSpawnerPosition(follow: self.player)
+                spawner.update()
             }
         }
     }
@@ -107,16 +139,87 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        if contact.bodyA.node?.name == "player" {
-            print("dead")
-        } else if contact.bodyB.node?.name == "player" {
-            print("dead")
+        //        if contact.bodyA.node?.name == "player" {
+        //            print("dead")
+        //        } else if contact.bodyB.node?.name == "player" {
+        //            print("dead")
+        //        }
+        //
+        //        if contact.bodyA.node?.name == "playerGraze" {
+        //            print("grazed")
+        //        } else if contact.bodyB.node?.name == "playerGraze" {
+        //            print("grazed")
+        //        }
+        
+//        print("\nbodyA: \(contact.bodyA.node?.name)\nbodyB: \(contact.bodyB.node?.name)")
+        
+//        if contact.bodyA.node?.name == "pBullet" || contact.bodyB.node?.name == "pBullet" {
+//            print("testing\nbodyA: \(contact.bodyA.node?.name)\nbodyB: \(contact.bodyB.node?.name)")
+//        }
+        
+//        if (contact.bodyA.node?.name == "eBullet" && contact.bodyB.node?.name == "player") ||
+//            (contact.bodyA.node?.name == "player" && contact.bodyB.node?.name == "eBullet") ||
+//            (contact.bodyA.node?.name == "enemy" && contact.bodyB.node?.name == "player") ||
+//            (contact.bodyA.node?.name == "player" && contact.bodyB.node?.name == "enemy"){
+//            print("dead")
+//        }
+//
+//        if (contact.bodyA.node?.name == "eBullet" && contact.bodyB.node?.name == "playerGraze") ||
+//            (contact.bodyA.node?.name == "playerGraze" && contact.bodyB.node?.name == "eBullet") {
+//            print("grazed")
+//        }
+//
+//        if (contact.bodyA.categoryBitMask == Bitmasks.pBullet.rawValue
+//            && contact.bodyB.categoryBitMask == Bitmasks.enemy.rawValue) ||
+//            (contact.bodyA.categoryBitMask == Bitmasks.enemy.rawValue
+//             && contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue) {
+//            print("hit an enemy")
+//        }
+        
+        if contact.bodyA.categoryBitMask == Bitmasks.eBullet.rawValue {
+            if contact.bodyB.categoryBitMask == Bitmasks.playerGraze.rawValue {
+                graze += 1
+                score += 10
+            }
+        } else if contact.bodyB.categoryBitMask == Bitmasks.eBullet.rawValue {
+            if contact.bodyA.categoryBitMask == Bitmasks.playerGraze.rawValue {
+                graze += 1
+                score += 10
+            }
         }
         
-        if contact.bodyA.node?.name == "playerGraze" {
-            print("grazed")
-        } else if contact.bodyB.node?.name == "playerGraze" {
-            print("grazed")
+        if contact.bodyA.categoryBitMask == Bitmasks.pBullet.rawValue {
+            if let bullet = contact.bodyA.node as? Bullet {
+                bullet.despawn = true
+            }
+            
+            if let fairy = contact.bodyB.node as? Fairy {
+                fairy.health -= 1
+                score += 10
+                if fairy.health <= 0 {
+                    fairy.removeFromParent()
+                    fairy.isActive = false
+                    fairy.skillClass == .light ? (score += 100) : (score += 500)
+                }
+            }
+            
+            return
+        } else if contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue {
+            if let bullet = contact.bodyA.node as? Bullet {
+                bullet.despawn = true
+            }
+            
+            if let fairy = contact.bodyA.node as? Fairy {
+                fairy.health -= 1
+                score += 10
+                if fairy.health <= 0 {
+                    fairy.removeFromParent()
+                    fairy.isActive = false
+                    fairy.skillClass == .light ? (score += 100) : (score += 500)
+                }
+            }
+            
+            return
         }
     }
 }

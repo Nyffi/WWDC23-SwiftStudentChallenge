@@ -47,8 +47,9 @@ class Bullet: SKNode {
         self.hitbox.affectedByGravity = false
         self.hitbox.allowsRotation = false
 //        self.hitbox.isDynamic = false
-        self.hitbox.collisionBitMask = 0
-        self.sprite.physicsBody = self.hitbox
+//        self.hitbox.categoryBitMask = 99
+        self.hitbox.collisionBitMask = Bitmasks.nothing.rawValue
+        self.physicsBody = self.hitbox
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -73,8 +74,8 @@ class Bullet: SKNode {
         self.position.x = (self.position.x + self.dirX * self.travelSpeed)
         self.position.y = (self.position.y + self.dirY * self.travelSpeed)
         
-        if self.position.x > 400 || self.position.x < -400 { self.despawn = true }
-        if self.position.y > 500 || self.position.y < -500 { self.despawn = true }
+        if self.position.x > 375 || self.position.x < -375 { self.despawn = true }
+        if self.position.y > 475 || self.position.y < -475 { self.despawn = true }
     }
     
     static func xDir(angle: CGFloat) -> CGFloat {

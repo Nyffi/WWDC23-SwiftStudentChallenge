@@ -16,11 +16,12 @@ protocol Enemy: SKNode, Scriptable {
     var canTakeDamage: Bool { get set }         // If enabled, enemy can take and deal damage to player.
     var canShoot: Bool { get set }              // If enabled, activate the enemy's bullet spawners.
     var isActive: Bool { get set }              // If it's currently on screen or not
+    var hitbox: SKPhysicsBody { get set }
     
     func setupNewSpawners(spawnerConfigs: [BulletSpawnerConfigs])
     func addNewSpawners(spawners: [BulletSpawner])
     func setupNewActionPhase(actions: [SKAction])
-    func executePhase()
+    func executePhase(progressThroughTheList: Bool)
 }
 
 extension Enemy where Self: SKNode {
@@ -34,7 +35,7 @@ extension Enemy where Self: SKNode {
         }
     }
     
-     func addNewSpawners(spawners: [BulletSpawner]) {
+    func addNewSpawners(spawners: [BulletSpawner]) {
         var aux = 0
         for spawner in spawners {
             self.spawners[aux] = spawner
@@ -47,10 +48,17 @@ extension Enemy where Self: SKNode {
         actionPhases.append(actions)
     }
     
-     func executePhase() {
+    func executePhase(progressThroughTheList: Bool) {
         if !actionPhases.isEmpty {
-            let phase = actionPhases.removeFirst()
-            self.run(.repeatForever(.sequence(phase)), withKey: "currentPhase")
+            let phase: [SKAction]
+            
+            if progressThroughTheList {
+                phase = actionPhases.removeFirst()
+            } else {
+                phase = actionPhases[0]
+            }
+            
+            self.run(.sequence(phase), withKey: "currentPhase")
         }
     }
 }

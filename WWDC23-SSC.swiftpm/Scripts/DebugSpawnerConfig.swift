@@ -10,6 +10,8 @@ import SpriteKit
 
 class DebugSpawnerConfig {
     static let data = BulletSpawnerConfigs(texture: SKTexture(imageNamed: "bulletNew"),
+                                           spriteSpin: .none,
+                                           ownerisPlayer: false,
                                            patternArrays: 5,
                                            bulletsPerArray: 2,
                                            spreadBetweenArray: 70,

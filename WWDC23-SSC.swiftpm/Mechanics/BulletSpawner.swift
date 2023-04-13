@@ -10,6 +10,8 @@ import SpriteKit
 
 class BulletSpawner: SKNode, Scriptable {
     let texture: SKTexture
+    var spriteSpin: SKAction?
+    let ownerisPlayer: Bool
     
     // Arrays
     var bulletArray: [Bullet] = []  // All bullets spawned and still alive
@@ -46,7 +48,26 @@ class BulletSpawner: SKNode, Scriptable {
     
     init(config: BulletSpawnerConfigs) {
         self.texture = config.texture
+        self.ownerisPlayer = config.ownerisPlayer
         super.init()
+        self.updateConfigData(config: config)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func updateConfigData(config: BulletSpawnerConfigs) {
+        switch config.spriteSpin {
+        case .none:
+            self.spriteSpin = nil
+        case .clockwise:
+            self.spriteSpin = .repeatForever(.rotate(byAngle: 360, duration: 0.25))
+        case .counterclockwise:
+            self.spriteSpin = .repeatForever(.rotate(byAngle: -360, duration: 0.25))
+        }
+        
+//        super.init()
         self.patternArrays = config.patternArrays
         self.bulletsPerArray = config.bulletsPerArray
         self.spreadBetweenArray = config.spreadBetweenArray
@@ -63,10 +84,6 @@ class BulletSpawner: SKNode, Scriptable {
         self.bulletAcceleration = config.bulletAcceleration
         self.bulletCurve = config.bulletCurve
         self.bulletTTL = config.bulletTTL
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     func update() {
@@ -115,6 +132,18 @@ class BulletSpawner: SKNode, Scriptable {
 //        print(bulletArray.count)
     }
     
+    func updateWhileAway() {
+        for bullet in bulletArray {
+            if bullet.despawn {
+                bullet.removeFromParent()
+                guard let index = bulletArray.firstIndex(of: bullet) else { continue }
+                bulletArray.remove(at: index)
+            }
+            
+            bullet.updatePos()
+        }
+    }
+    
     // Calculate directions of spawning points
     
     func calculation(i: Int, j: Int, arrayAngle: CGFloat, bulletAngle: CGFloat) {
@@ -126,6 +155,20 @@ class BulletSpawner: SKNode, Scriptable {
         let y1 = yOffset + self.lengthDirY(dist: objectHeight, angle: angleCalc)
                 
         let bullet = Bullet(sprite: SKSpriteNode(texture: self.texture), spawnX: x1, spawnY: y1, travelSpeed: bulletSpeed, acceleration: bulletAcceleration, direction: angleCalc, curve: bulletCurve, timeBeforeDespawn: bulletTTL)
+        if let spin = self.spriteSpin {
+            bullet.run(spin)
+        }
+        
+        if ownerisPlayer {
+            bullet.name = "pBullet"
+            bullet.hitbox.categoryBitMask = Bitmasks.pBullet.rawValue
+            bullet.hitbox.contactTestBitMask = Bitmasks.enemy.rawValue
+            
+        } else {
+            bullet.name = "eBullet"
+            bullet.hitbox.categoryBitMask = Bitmasks.eBullet.rawValue
+            bullet.hitbox.contactTestBitMask = Bitmasks.player.rawValue
+        }
         
         guard let scene = self.scene else { print("ERROR: Failed to find Scene."); return }
         bullet.spawn(scene: scene)
