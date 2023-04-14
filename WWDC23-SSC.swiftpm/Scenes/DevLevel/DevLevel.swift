@@ -13,7 +13,7 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     
     let player = PlayableCharacter()
     
-    let magic = SKSpriteNode(imageNamed: "magicCircle")
+//    let magic = SKSpriteNode(imageNamed: "magicCircle")
     
     let music = SKAudioNode(fileNamed: "tenshi.mp3")
     
@@ -37,15 +37,15 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         player.position.y = -self.frame.height / 4
         addChild(player)
         
-        magic.position.y = 350
-        magic.size = CGSize(width: 200, height: 200)
-        magic.alpha = 0.5
-        magic.color = .red
-        magic.colorBlendFactor = 1
-        magic.run(.repeatForever(.sequence([.resize(toWidth: 0, duration: 5), .resize(toWidth: 200, duration: 5)])))
-        magic.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
-        addChild(magic)
-        
+//        magic.position.y = 350
+//        magic.size = CGSize(width: 200, height: 200)
+//        magic.alpha = 0.5
+//        magic.color = .red
+//        magic.colorBlendFactor = 1
+//        magic.run(.repeatForever(.sequence([.resize(toWidth: 0, duration: 5), .resize(toWidth: 200, duration: 5)])))
+//        magic.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
+//        addChild(magic)
+//
         let moveToA = SKAction.moveTo(x: -250, duration: 2.25)
         moveToA.timingMode = .easeOut
         let moveToB = SKAction.moveTo(x: 250, duration: 2.25)
@@ -69,7 +69,12 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         addChild(music)
         music.autoplayLooped = true
         
-        script.activateSpawn()
+//        script.activateSpawn()
+        script.spawnBoss()
+        
+//        DispatchQueue.main.sync {
+//            script.spawnBoss()
+//        }
 //        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
 //            self.script.deactivateSpawn()
 //        }
@@ -95,8 +100,9 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        print("Score: \(score)")
-        print("Graze: \(graze)")
+//        print("Score: \(score)")
+//        print("Graze: \(graze)")
+        print("Boss HP: \(script.boss.health) / \(script.boss.maxHealth)")
 //        spawner.updateSpawnerPosition(follow: magic)
 //        spawner.update()
         
@@ -120,6 +126,16 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                 spawner.updateSpawnerPosition(follow: self.player)
                 spawner.update()
             }
+        }
+        
+        DispatchQueue.main.async {
+            if self.script.boss.isActive && self.script.boss.canShoot {
+                for bossSpawner in self.script.boss.spawners {
+                    bossSpawner.value.updateSpawnerPosition(follow: self.script.boss)
+                    bossSpawner.value.update()
+                }
+            }
+            
         }
     }
     
@@ -210,6 +226,13 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                     }
                 }
                 
+                if let boss = contact.bodyB.node as? Boss {
+                    boss.health -= 1
+                    self.score += 15
+                } else {
+                    print("bruh it failed")
+                }
+                
                 return
             } else if contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue {
                 if let bullet = contact.bodyA.node as? Bullet {
@@ -224,6 +247,13 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                         fairy.isActive = false
                         fairy.skillClass == .light ? (self.score += 100) : (self.score += 500)
                     }
+                }
+                
+                if let boss = contact.bodyA.node as? Boss {
+                    boss.health -= 1
+                    self.score += 15
+                } else {
+                    print("bruh it failed")
                 }
                 
                 return

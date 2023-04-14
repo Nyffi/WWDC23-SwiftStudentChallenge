@@ -10,11 +10,16 @@ import SpriteKit
 
 class LevelOneScript: SKNode {
     var fairies: [Fairy] = []
-    var enemyCounter = 0
     var lightFairyBulletSpawner: BulletSpawnerConfigs
     var heavyFairyBulletSpawner: BulletSpawnerConfigs
     
+    var boss: Boss
+    var bossSpawners: [[BulletSpawnerConfigs]] = []
+    
+    var enemyCounter = 0
+    
     var timerMain = Timer()
+    
         
     override init() {
         lightFairyBulletSpawner = BulletSpawnerConfigs(texture: SKTexture(),
@@ -55,6 +60,27 @@ class LevelOneScript: SKNode {
                                                   bulletAcceleration: 0.005,
                                                   bulletCurve: 0,
                                                   bulletTTL: 10)
+        boss = Boss(health: 7500)
+        bossSpawners.append([BulletSpawnerConfigs(texture: SKTexture(),
+                                                  spriteSpin: .none,
+                                                  ownerisPlayer: false,
+                                                  patternArrays: 4,
+                                                  bulletsPerArray: 20,
+                                                  spreadBetweenArray: 90,
+                                                  spreadWithinArray: 100,
+                                                  startAngle: 0,
+                                                  spinRate: 5,
+                                                  spinModificator: 0.5,
+                                                  invertSpin: true,
+                                                  maxSpinRate: 20,
+                                                  fireRate: 50,
+                                                  objectWidth: 1,
+                                                  objectHeight: 1,
+                                                  bulletSpeed: 0.75,
+                                                  bulletAcceleration: -0.01,
+                                                  bulletCurve: 0.25,
+                                                  bulletTTL: 20)])
+        
         
         super.init()
     }
@@ -66,6 +92,8 @@ class LevelOneScript: SKNode {
     func updateTextures(bulletAtlas: SKTextureAtlas) {
         lightFairyBulletSpawner.texture = bulletAtlas.textureNamed("bulletLight")
         heavyFairyBulletSpawner.texture = bulletAtlas.textureNamed("bulletHeavy")
+        
+        bossSpawners[0][0].texture = bulletAtlas.textureNamed("bulletLight")
     }
     
     func randomizeFireRate(config: inout BulletSpawnerConfigs, in between: ClosedRange<Int>) {
@@ -75,6 +103,8 @@ class LevelOneScript: SKNode {
     }
     
     func initializeEnemies() {
+        var smooth: SKAction
+        
         var auxX = -320
         var auxY = 180
         
@@ -86,9 +116,11 @@ class LevelOneScript: SKNode {
                 let fairyLight = Fairy(fairy: .light, pos: CGPoint(x: auxX - 15, y: auxY))
                 fairyLight.name = "enemy_fairyLight_\(i)_\(j)"
 //                fairyLight.position = CGPoint(x: CGFloat.random(in: -450...450), y: 475)
+                smooth = .move(to: fairyLight.finalSpot, duration: 2)
+                smooth.timingMode = .easeOut
                 fairyLight.setupNewSpawners(spawnerConfigs: [lightFairyBulletSpawner])
                 fairyLight.setupNewActionPhase(actions: [.move(to: CGPoint(x: CGFloat.random(in: -450...450), y: 475), duration: 0),
-                                                         .move(to: fairyLight.finalSpot, duration: 2),
+                                                         smooth,
                                                          .wait(forDuration: 0.25),
                                                          .run { fairyLight.isActive = true }])
                 fairies.append(fairyLight)
@@ -96,10 +128,11 @@ class LevelOneScript: SKNode {
                 let fairyHeavy = Fairy(fairy: .heavy, pos: CGPoint(x: auxX + 15, y: auxY))
                 fairyHeavy.name = "enemy_fairyHeavy_\(i)_\(j)"
 //                fairyHeavy.position = CGPoint(x: CGFloat.random(in: -450...450), y: 475)
+                smooth = .move(to: fairyHeavy.finalSpot, duration: 2)
+                smooth.timingMode = .easeOut
                 fairyHeavy.setupNewSpawners(spawnerConfigs: [heavyFairyBulletSpawner])
-
                 fairyHeavy.setupNewActionPhase(actions: [.move(to: CGPoint(x: CGFloat.random(in: -450...450), y: 475), duration: 0),
-                                                         .move(to: fairyHeavy.finalSpot, duration: 2),
+                                                         smooth,
                                                          .wait(forDuration: 0.25),
                                                          .run { fairyHeavy.isActive = true }])
                 fairyHeavy.sprite.color = .black
@@ -110,6 +143,8 @@ class LevelOneScript: SKNode {
             auxX = -320
             auxY += 120
         }
+        
+        boss.setupNewSpawners(spawnerConfigs: bossSpawners[0])
     }
     
     func spawnEnemy(quantity: Int) {
@@ -126,6 +161,50 @@ class LevelOneScript: SKNode {
                 self.addChild(fairy)
             }
             fairy.executePhase(progressThroughTheList: false)
+        }
+    }
+    
+    func spawnBoss() {
+        let fairyLeave = SKAction.move(to: CGPoint(x: CGFloat.random(in: -450...450), y: 475), duration: 2)
+        fairyLeave.timingMode = .easeOut
+        
+        deactivateSpawn()
+        for fairy in fairies {
+            fairy.canShoot = false
+            fairy.run(.move(to: CGPoint(x: CGFloat.random(in: -450...450), y: 475), duration: 2)) {
+                fairy.isActive = false
+                fairy.canTakeDamage = false
+                if fairy.parent != nil {
+                    fairy.removeFromParent()
+                }
+            }
+        }
+        fairies = []
+        
+        // TEMPORARY
+//        boss.setupNewSpawners(spawnerConfigs: bossSpawners[0])
+        // TEMPORARY
+        
+        let bossArrive = SKAction.moveTo(y: (self.scene?.view?.frame.height ?? 960) / 4, duration: 1)
+        bossArrive.timingMode = .easeOut
+        
+        boss.position = CGPoint(x: 0, y: 475)
+        if boss.parent == nil {
+            addChild(boss)
+        }
+        boss.run(bossArrive) {
+            print("boss vai atirar")
+            
+            self.boss.canShoot = true
+            self.boss.canTakeDamage = true
+            self.boss.isActive = true
+            
+            self.boss.run(.repeatForever(.sequence([.wait(forDuration: 5),
+                                                    .run {
+                                                        let randPos = CGPoint(x: CGFloat.random(in: -250...250), y: CGFloat.random(in: 50...350))
+                                                        self.boss.run(.move(to: randPos, duration: 2))
+                                                    }])))
+//            self.boss.executePhase(progressThroughTheList: true)
         }
     }
     

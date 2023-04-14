@@ -17,6 +17,7 @@ protocol Enemy: SKNode, Scriptable {
     var canShoot: Bool { get set }              // If enabled, activate the enemy's bullet spawners.
     var isActive: Bool { get set }              // If it's currently on screen or not
     var hitbox: SKPhysicsBody { get set }
+    var sprite: SKSpriteNode { get set }
     
     func setupNewSpawners(spawnerConfigs: [BulletSpawnerConfigs])
     func addNewSpawners(spawners: [BulletSpawner])
@@ -26,21 +27,17 @@ protocol Enemy: SKNode, Scriptable {
 
 extension Enemy where Self: SKNode {
     func setupNewSpawners(spawnerConfigs: [BulletSpawnerConfigs]) {
-        var aux = 0
         for config in spawnerConfigs {
             let spawner = BulletSpawner(config: config)
-            spawners[aux] = spawner
+            spawners[spawners.count] = spawner
             addChild(spawner)
-            aux += 1
         }
     }
     
     func addNewSpawners(spawners: [BulletSpawner]) {
-        var aux = 0
         for spawner in spawners {
-            self.spawners[aux] = spawner
+            self.spawners[spawners.count] = spawner
             addChild(spawner)
-            aux += 1
         }
     }
     
@@ -54,11 +51,11 @@ extension Enemy where Self: SKNode {
             
             if progressThroughTheList {
                 phase = actionPhases.removeFirst()
+                self.run(.repeatForever(.sequence(phase)), withKey: "currentPhase")
             } else {
                 phase = actionPhases[0]
+                self.run(.sequence(phase), withKey: "currentPhase")
             }
-            
-            self.run(.sequence(phase), withKey: "currentPhase")
         }
     }
 }
