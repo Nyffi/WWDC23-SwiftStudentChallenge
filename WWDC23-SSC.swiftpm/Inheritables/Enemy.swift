@@ -9,8 +9,8 @@ import Foundation
 import SpriteKit
 
 protocol Enemy: SKNode, Scriptable {
-    var spawners: [Int:BulletSpawner] { get set }   // All the spawners an enemy can have. Multiple spawners can be used for more complex patterns
-    var actionPhases: [[SKAction]] { get set }  // Array containing scripts of all phases an enemy can have
+    var spawners: [BulletSpawner] { get set }   // All the spawners an enemy can have. Multiple spawners can be used for more complex patterns
+    var actionPhases: [SKAction] { get set }  // Array containing scripts of all phases an enemy can have
     var health: Int { get set }                 // Current Health
     var maxHealth: Int { get set }              // Total Health
     var canTakeDamage: Bool { get set }         // If enabled, enemy can take and deal damage to player.
@@ -21,7 +21,7 @@ protocol Enemy: SKNode, Scriptable {
     
     func setupNewSpawners(spawnerConfigs: [BulletSpawnerConfigs])
     func addNewSpawners(spawners: [BulletSpawner])
-    func setupNewActionPhase(actions: [SKAction])
+    func setupNewActionPhase(actions: SKAction)
     func executePhase(progressThroughTheList: Bool)
 }
 
@@ -29,32 +29,33 @@ extension Enemy where Self: SKNode {
     func setupNewSpawners(spawnerConfigs: [BulletSpawnerConfigs]) {
         for config in spawnerConfigs {
             let spawner = BulletSpawner(config: config)
-            spawners[spawners.count] = spawner
+            spawners.append(spawner)
             addChild(spawner)
         }
     }
     
     func addNewSpawners(spawners: [BulletSpawner]) {
         for spawner in spawners {
-            self.spawners[spawners.count] = spawner
+            self.spawners.append(spawner)
             addChild(spawner)
         }
     }
     
-     func setupNewActionPhase(actions: [SKAction]) {
+     func setupNewActionPhase(actions: SKAction) {
         actionPhases.append(actions)
     }
     
     func executePhase(progressThroughTheList: Bool) {
         if !actionPhases.isEmpty {
-            let phase: [SKAction]
+            let phase: SKAction
             
             if progressThroughTheList {
                 phase = actionPhases.removeFirst()
-                self.run(.repeatForever(.sequence(phase)), withKey: "currentPhase")
+                self.run(.repeatForever(phase), withKey: "currentPhase")
+                print("\(self.parent == nil)")
             } else {
                 phase = actionPhases[0]
-                self.run(.sequence(phase), withKey: "currentPhase")
+                self.run(phase, withKey: "currentPhase")
             }
         }
     }

@@ -9,8 +9,8 @@ import Foundation
 import SpriteKit
 
 class Boss: SKNode, Enemy {
-    var spawners: [Int : BulletSpawner]
-    var actionPhases: [[SKAction]]
+    var spawners: [BulletSpawner]
+    var actionPhases: [SKAction]
     var health: Int
     var maxHealth: Int
     var canTakeDamage: Bool
@@ -24,7 +24,7 @@ class Boss: SKNode, Enemy {
     var nextPhaseAt: [Int]
     
     init(health: Int) {
-        spawners = [:]
+        spawners = []
         actionPhases = []
         maxHealth = health
         self.health = health
@@ -80,13 +80,29 @@ class Boss: SKNode, Enemy {
         canShoot = true
     }
     
-    func phaseCooldown() {
-        canTakeDamage = false
-        canShoot = false
-        
+    private func phaseCooldown() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             self.canTakeDamage = true
             self.canShoot = true
         }
     }
+    
+    private func phaseSpawnerUpdate(configs: [BulletSpawnerConfigs]) {
+        if configs.count != spawners.count { print("[ERROR] Number of spawner configs does not match number of spawners, updating what's possible...")}
+        
+        for i in 0..<spawners.count {
+            if i >= spawners.count || i >= configs.count { return }
+            
+            spawners[i].updateConfigData(config: configs[i])
+        }
+    }
+    
+    func initiateNewPhase(newBulletConfigs: [BulletSpawnerConfigs]) {
+        canTakeDamage = false
+        canShoot = false
+        
+        phaseSpawnerUpdate(configs: newBulletConfigs)
+        phaseCooldown()
+    }
+    
 }

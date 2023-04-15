@@ -25,6 +25,18 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     var topScore = 0
     var graze = 0
     
+    var timeCounter = 0
+    var fairyTimeLimit = 10
+    var bossTimeLimit = 30
+    var currentStep = -1 {   // -1 - Invalid | 0 - Common Enemies | 1 - Cooldown | 2 - Boss Fight | 3 - End
+        didSet {
+            if currentStep == 0 { setCounter(self.fairyTimeLimit); return }
+            if currentStep == 1 { setCounter(8); script.despawnEnemy(); return }
+            if currentStep == 2 { setCounter(self.bossTimeLimit); script.spawnBoss(); return }
+        }
+    }
+    var gameTimer = Timer()
+    
     override func didMove(to view: SKView) {
         super.didMove(to: view)
         physicsWorld.contactDelegate = self
@@ -69,8 +81,9 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         addChild(music)
         music.autoplayLooped = true
         
-//        script.activateSpawn()
-        script.spawnBoss()
+        script.activateSpawn()
+        self.currentStep = 0
+//        script.spawnBoss()
         
 //        DispatchQueue.main.sync {
 //            script.spawnBoss()
@@ -80,6 +93,23 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
 //        }
 //        script.spawnEnemy(quantity: 1)
 //        self.spawnerTestSetup()
+    }
+    
+    func setCounter(_ time: Int) {
+        if self.gameTimer.isValid { self.gameTimer.invalidate() }
+        
+        self.gameTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTimeCounter), userInfo: nil, repeats: true)
+        self.timeCounter = time
+    }
+    
+    @objc func updateTimeCounter() {
+        if self.timeCounter > 0 {
+            self.timeCounter -= 1
+            print("Time left: \(self.timeCounter)")
+        } else {
+            self.gameTimer.invalidate()
+            self.currentStep += 1
+        }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -102,20 +132,21 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     override func update(_ currentTime: TimeInterval) {
 //        print("Score: \(score)")
 //        print("Graze: \(graze)")
-        print("Boss HP: \(script.boss.health) / \(script.boss.maxHealth)")
+//        print("Boss HP: \(script.boss.health) / \(script.boss.maxHealth)")
 //        spawner.updateSpawnerPosition(follow: magic)
 //        spawner.update()
         
         DispatchQueue.main.async {
-            for enemy in self.script.fairies {
-                if enemy.isActive && enemy.canShoot {
-                    for spawner in enemy.spawners {
-                        spawner.value.updateSpawnerPosition(follow: enemy)
-                        spawner.value.update()
+            for fairy in self.script.fairies {
+                if fairy.isActive && fairy.canShoot {
+                    for spawner in fairy.spawners {
+                        spawner.updateSpawnerPosition(follow: fairy)
+                        spawner.update()
                     }
                 } else {
-                    for spawner in enemy.spawners {
-                        spawner.value.updateWhileAway()
+                    for spawner in fairy.spawners {
+                        spawner.updateWhileAway()
+                        if spawner.bulletArray.isEmpty && !fairy.hasActions() { fairy.removeFromParent() }
                     }
                 }
             }
@@ -131,8 +162,8 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         DispatchQueue.main.async {
             if self.script.boss.isActive && self.script.boss.canShoot {
                 for bossSpawner in self.script.boss.spawners {
-                    bossSpawner.value.updateSpawnerPosition(follow: self.script.boss)
-                    bossSpawner.value.update()
+                    bossSpawner.updateSpawnerPosition(follow: self.script.boss)
+                    bossSpawner.update()
                 }
             }
             
@@ -227,10 +258,11 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                 }
                 
                 if let boss = contact.bodyB.node as? Boss {
-                    boss.health -= 1
-                    self.score += 15
-                } else {
-                    print("bruh it failed")
+                    if boss.canTakeDamage {
+                        boss.health -= 1
+                        self.score += 15
+                    }
+                    
                 }
                 
                 return
@@ -247,13 +279,15 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                         fairy.isActive = false
                         fairy.skillClass == .light ? (self.score += 100) : (self.score += 500)
                     }
+                    
+                    return
                 }
                 
                 if let boss = contact.bodyA.node as? Boss {
                     boss.health -= 1
                     self.score += 15
-                } else {
-                    print("bruh it failed")
+                    
+                    return
                 }
                 
                 return

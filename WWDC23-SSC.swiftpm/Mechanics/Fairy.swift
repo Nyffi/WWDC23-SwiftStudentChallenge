@@ -9,8 +9,8 @@ import Foundation
 import SpriteKit
 
 class Fairy: SKNode, Enemy {
-    var spawners: [Int:BulletSpawner]
-    var actionPhases: [[SKAction]]
+    var spawners: [BulletSpawner]
+    var actionPhases: [SKAction]
     var health: Int
     var maxHealth: Int
     var canTakeDamage: Bool
@@ -23,7 +23,7 @@ class Fairy: SKNode, Enemy {
     var hitbox: SKPhysicsBody
     
     init(fairy: FairyClass, pos: CGPoint) {
-        spawners = [:]
+        spawners = []
         actionPhases = []
         health = 0
         maxHealth = 0
