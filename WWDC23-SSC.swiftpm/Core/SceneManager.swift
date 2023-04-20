@@ -28,7 +28,7 @@ class SceneManager {
         case .Menu:
             return MainScene(fileNamed: "MainMenu")
         case .Level:
-            return DevLevel(fileNamed: "LevelOne")
+            return MainLevel(fileNamed: "LevelOne")
         }
     }
 }

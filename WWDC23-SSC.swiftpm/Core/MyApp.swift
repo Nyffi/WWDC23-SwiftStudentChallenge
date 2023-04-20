@@ -12,7 +12,7 @@ struct MyApp: App {
     
     var body: some Scene {
         WindowGroup {
-            SpriteView(scene: scene, debugOptions: [.showsFPS, .showsDrawCount, .showsPhysics, .showsNodeCount])
+            SpriteView(scene: scene)
                 .ignoresSafeArea()
                 .previewInterfaceOrientation(.portrait)
         }
