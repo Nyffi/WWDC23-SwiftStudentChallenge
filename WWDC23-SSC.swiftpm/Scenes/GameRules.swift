@@ -11,7 +11,6 @@ import SpriteKit
 class GameRules: SKScene, SKPhysicsContactDelegate {
     let player = PlayableCharacter()
     var enemies: [Enemy] = []
-//    let boss = Boss()
     var bgM = SKAudioNode()
     
     let bulletAtlas = SKTextureAtlas(named: "bulletVariants")

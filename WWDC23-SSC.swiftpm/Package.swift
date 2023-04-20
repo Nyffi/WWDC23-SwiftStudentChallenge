@@ -8,19 +8,19 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "WWDC23-SSC",
+    name: "Coven",
     platforms: [
         .iOS("15.2")
     ],
     products: [
         .iOSApplication(
-            name: "WWDC23-SSC",
+            name: "Coven",
             targets: ["AppModule"],
             bundleIdentifier: "com.nyffi.WWDC23-SSC",
             teamIdentifier: "AK63LT6QFU",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .plane),
+            appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.blue),
             supportedDeviceFamilies: [
                 .pad,

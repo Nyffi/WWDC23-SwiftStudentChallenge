@@ -8,7 +8,7 @@
 import Foundation
 import SpriteKit
 
-protocol Enemy: SKNode, Scriptable {
+protocol Enemy: SKNode {
     var spawners: [BulletSpawner] { get set }   // All the spawners an enemy can have. Multiple spawners can be used for more complex patterns
     var actionPhases: [SKAction] { get set }  // Array containing scripts of all phases an enemy can have
     var health: Int { get set }                 // Current Health
@@ -41,17 +41,25 @@ extension Enemy where Self: SKNode {
         }
     }
     
-     func setupNewActionPhase(actions: SKAction) {
+    func setupNewActionPhase(actions: SKAction) {
         actionPhases.append(actions)
     }
     
     func executePhase(progressThroughTheList: Bool) {
-        if !actionPhases.isEmpty {
-            let phase: SKAction
-            
+        if actionPhases.isEmpty { return }
+        var phase = SKAction()
+        
+        if !self.hasActions() {
+            runNewAction()
+        } else if self.action(forKey: "currentPhase_repeat") != nil {
+            self.removeAction(forKey: "currentPhase_repeat")
+            runNewAction()
+        }
+        
+        func runNewAction() {
             if progressThroughTheList {
                 phase = actionPhases.removeFirst()
-                self.run(.repeatForever(phase), withKey: "currentPhase")
+                self.run(.repeatForever(phase), withKey: "currentPhase_repeat")
                 print("\(self.parent == nil)")
             } else {
                 phase = actionPhases[0]

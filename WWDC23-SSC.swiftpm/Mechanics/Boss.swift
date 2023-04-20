@@ -34,8 +34,8 @@ class Boss: SKNode, Enemy {
         canShoot = false
         isActive = false
         
-        sprite = SKSpriteNode(color: .red, size: CGSize(width: 75, height: 125))
-        hitbox = SKPhysicsBody(circleOfRadius: sprite.size.width * 0.5)
+        sprite = SKSpriteNode(color: .red, size: CGSize(width: 140, height: 125))
+        hitbox = SKPhysicsBody(circleOfRadius: sprite.size.width * 0.75)
         hitbox.affectedByGravity = false
         hitbox.allowsRotation = false
         hitbox.isDynamic = false
@@ -44,11 +44,11 @@ class Boss: SKNode, Enemy {
         
         magicCircleBG = SKSpriteNode(imageNamed: "magicCircle")
         magicCircleBG.size = CGSize(width: 200, height: 200)
-        magicCircleBG.alpha = 0.25
+        magicCircleBG.alpha = 0.5
         magicCircleBG.color = .red
         magicCircleBG.colorBlendFactor = 1
         magicCircleBG.zPosition = -10
-        magicCircleBG.run(.repeatForever(.sequence([.resize(toWidth: 0, duration: 5), .resize(toWidth: 200, duration: 5)])))
+        magicCircleBG.run(.repeatForever(.sequence([.resize(toWidth: 100, duration: 5), .resize(toWidth: 200, duration: 5)])))
         magicCircleBG.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
         
         super.init()
@@ -78,6 +78,11 @@ class Boss: SKNode, Enemy {
     func activate() {
         canTakeDamage = true
         canShoot = true
+    }
+    
+    func deactivate() {
+        canTakeDamage = false
+        canShoot = false
     }
     
     private func phaseCooldown() {

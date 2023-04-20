@@ -32,7 +32,7 @@ class Fairy: SKNode, Enemy {
         isActive = false
         skillClass = fairy
         finalSpot = pos
-        sprite = SKSpriteNode(color: .magenta, size: CGSize(width: 25, height: 40))
+        sprite = SKSpriteNode(color: .magenta, size: CGSize(width: 40, height: 40))
         
         hitbox = SKPhysicsBody(circleOfRadius: self.sprite.size.width * 0.5)
         hitbox.affectedByGravity = false

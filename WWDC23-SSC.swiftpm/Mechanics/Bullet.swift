@@ -26,7 +26,7 @@ class Bullet: SKNode {
     
     init(sprite: SKSpriteNode, spawnX: CGFloat, spawnY: CGFloat, travelSpeed: CGFloat, acceleration: CGFloat, direction: CGFloat, curve: CGFloat, timeBeforeDespawn: TimeInterval) {
         self.sprite = sprite
-        self.hitbox = SKPhysicsBody(circleOfRadius: sprite.size.width * 0.25)
+        self.hitbox = SKPhysicsBody(circleOfRadius: sprite.size.width * 0.2)
         
         self.acceleration = acceleration
         self.direction = direction
@@ -46,8 +46,7 @@ class Bullet: SKNode {
         
         self.hitbox.affectedByGravity = false
         self.hitbox.allowsRotation = false
-//        self.hitbox.isDynamic = false
-//        self.hitbox.categoryBitMask = 99
+        
         self.hitbox.collisionBitMask = Bitmasks.nothing.rawValue
         self.physicsBody = self.hitbox
     }

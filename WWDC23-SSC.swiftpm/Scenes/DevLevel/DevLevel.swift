@@ -8,16 +8,13 @@
 import Foundation
 import SpriteKit
 
-class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
+class DevLevel: SKScene, SKPhysicsContactDelegate {
     let bulletAtlas = SKTextureAtlas(named: "bulletVariants")
     
     let player = PlayableCharacter()
-    
-//    let magic = SKSpriteNode(imageNamed: "magicCircle")
-    
-    let music = SKAudioNode(fileNamed: "tenshi.mp3")
-    
-    let spawner = BulletSpawner(config: DebugSpawnerConfig.data)
+        
+    let music = SKAudioNode(fileNamed: "levelMusic.mp3")
+    let bossMusic = SKAudioNode(fileNamed: "bossMusic.mp3")
     
     let script = LevelOneScript()
     
@@ -26,22 +23,60 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     var graze = 0
     
     var timeCounter = 0
-    var fairyTimeLimit = 10
-    var bossTimeLimit = 30
+    var fairyTimeLimit = 45  // 45
+    var bossTimeLimit = 90   // 90
     var currentStep = -1 {   // -1 - Invalid | 0 - Common Enemies | 1 - Cooldown | 2 - Boss Fight | 3 - End
         didSet {
             if currentStep == 0 { setCounter(self.fairyTimeLimit); return }
             if currentStep == 1 { setCounter(8); script.despawnEnemy(); return }
-            if currentStep == 2 { setCounter(self.bossTimeLimit); script.spawnBoss(); return }
+            if currentStep == 2 { setCounter(self.bossTimeLimit); script.spawnBoss(); music.removeFromParent(); addChild(bossMusic); return }
+            if currentStep == 3 { setCounter(10); script.despawnBoss(); return }
         }
     }
-    var gameTimer = Timer()
+    let timerBG = SKShapeNode(circleOfRadius: 30)
+    let timerLabel = SKLabelNode()
     
+    let scoreBG = SKShapeNode(rectOf: CGSize(width: 200, height: 50))
+    let scoreLabel = SKLabelNode()
+    var gameTimer = Timer()
+
     override func didMove(to view: SKView) {
-        super.didMove(to: view)
+        self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        self.view?.ignoresSiblingOrder = true
+//        super.didMove(to: view)
         physicsWorld.contactDelegate = self
         
-        script.updateTextures(bulletAtlas: bulletAtlas)
+        timerBG.fillColor = .darkGray
+        timerBG.strokeColor = .clear
+        timerBG.zPosition = 100
+        timerBG.position.y = self.size.height / 2.25
+        timerLabel.fontName = "IM_FELL_DW_Pica_Roman_SC"
+        timerLabel.fontSize = 32
+        timerLabel.zPosition = 1
+        timerLabel.verticalAlignmentMode = .center
+        timerLabel.horizontalAlignmentMode = .center
+        timerBG.addChild(timerLabel)
+        timerLabel.position = CGPoint(x: 0, y: 0)
+        
+        
+        scoreBG.fillColor = .darkGray
+        scoreBG.strokeColor = .clear
+        scoreBG.zPosition = 100
+        scoreBG.position.x = -self.size.width / 3
+        scoreBG.position.y = -self.size.height / 2.25
+        scoreLabel.fontName = "IM_FELL_DW_Pica_Roman_SC"
+        scoreLabel.fontSize = 32
+        scoreLabel.zPosition = 1
+        scoreLabel.verticalAlignmentMode = .center
+        scoreLabel.horizontalAlignmentMode = .center
+        scoreBG.addChild(scoreLabel)
+        scoreLabel.position = CGPoint(x: 0, y: 0)
+        scoreLabel.text = String(format: "%08d", self.score)
+        
+        let background = self.childNode(withName: "gameBG") as! SKSpriteNode
+        background.run(.repeatForever(.sequence([.moveTo(y: -480, duration: 15),
+                                                 .moveTo(y: 480, duration: 0)])))
+        
         script.initializeEnemies()
         player.initalizeSpawners(bullets: bulletAtlas)
         
@@ -49,54 +84,30 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
         player.position.y = -self.frame.height / 4
         addChild(player)
         
-//        magic.position.y = 350
-//        magic.size = CGSize(width: 200, height: 200)
-//        magic.alpha = 0.5
-//        magic.color = .red
-//        magic.colorBlendFactor = 1
-//        magic.run(.repeatForever(.sequence([.resize(toWidth: 0, duration: 5), .resize(toWidth: 200, duration: 5)])))
-//        magic.run(.repeatForever(.sequence([.rotate(byAngle: 10, duration: 10)])))
-//        addChild(magic)
-//
         let moveToA = SKAction.moveTo(x: -250, duration: 2.25)
         moveToA.timingMode = .easeOut
         let moveToB = SKAction.moveTo(x: 250, duration: 2.25)
         moveToB.timingMode = .easeOut
-        
-//        magic.run(.repeatForever(.sequence([moveToA,
-//                                            .wait(forDuration: 3),
-//                                            .run { self.script.spawnEnemy(type: .fairyLight) },
-//                                            moveToB,
-//                                            .wait(forDuration: 3),
-//                                            .run { self.script.spawnEnemy(type: .fairyLight) }])))
-        player.addChild(spawner)
-        
-//        guard let gameScene = self else { print("SCENE WAS NOT ACHIEVABLE"); return }
-//        script.gameScene = self
-//        script.initializeEnemies()
+
         addChild(script)
     }
     
     override func sceneDidLoad() {
         addChild(music)
-        music.autoplayLooped = true
+        addChild(timerBG)
+        addChild(scoreBG)
         
         script.activateSpawn()
         self.currentStep = 0
-//        script.spawnBoss()
-        
-//        DispatchQueue.main.sync {
-//            script.spawnBoss()
-//        }
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-//            self.script.deactivateSpawn()
-//        }
-//        script.spawnEnemy(quantity: 1)
-//        self.spawnerTestSetup()
     }
     
     func setCounter(_ time: Int) {
         if self.gameTimer.isValid { self.gameTimer.invalidate() }
+        
+        self.timeCounter = time
+        if self.currentStep == 0 || self.currentStep == 2 {
+            self.timerLabel.text = String.init(format: "%02d", self.timeCounter)
+        }
         
         self.gameTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTimeCounter), userInfo: nil, repeats: true)
         self.timeCounter = time
@@ -105,10 +116,14 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     @objc func updateTimeCounter() {
         if self.timeCounter > 0 {
             self.timeCounter -= 1
-            print("Time left: \(self.timeCounter)")
+            if self.currentStep == 0 || self.currentStep == 2 {
+                self.timerLabel.text = String.init(format: "%02d", self.timeCounter)
+            }
         } else {
             self.gameTimer.invalidate()
-            self.currentStep += 1
+            if self.currentStep == 3 { saveScore(); SceneManager.switchScenes(from: self, to: .Menu) } else {
+                self.currentStep += 1
+            }
         }
     }
     
@@ -130,12 +145,6 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
-//        print("Score: \(score)")
-//        print("Graze: \(graze)")
-//        print("Boss HP: \(script.boss.health) / \(script.boss.maxHealth)")
-//        spawner.updateSpawnerPosition(follow: magic)
-//        spawner.update()
-        
         DispatchQueue.main.async {
             for fairy in self.script.fairies {
                 if fairy.isActive && fairy.canShoot {
@@ -165,77 +174,42 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                     bossSpawner.updateSpawnerPosition(follow: self.script.boss)
                     bossSpawner.update()
                 }
+            } else {
+                for bossSpawner in self.script.boss.spawners {
+                    bossSpawner.updateWhileAway()
+                    if bossSpawner.bulletArray.isEmpty && !self.script.boss.hasActions() { self.script.boss.removeFromParent() }
+                }
             }
             
         }
-    }
-    
-    func spawnerTestSetup() {
-        spawner.alterBulletPattern(array: 5, bulletsPerArray: 2)
-        spawner.alterSpreadBetweenArrays(spread: 70)
-        spawner.alterSpreadWithinArrays(spread: 20)
-        spawner.alterMaxSpin(max: 20)
-        spawner.alterSpin(rate: 0, modif: 1.5)
-        spawner.alterFireRate(rate: 3)
-        spawner.alterBulletSpeed(speed: 1.5)
-        spawner.alterBulletCurve(curve: 0)
-        spawner.alterBulletTTL(ttl: 10)
-//        spawner.bulletAcceleration = -0.1
-        spawner.objectWidth = 25
-        spawner.objectHeight = 25
+        
+        DispatchQueue.main.async {
+            self.scoreLabel.text = String(format: "%08d", self.score)
+        }
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        //        if contact.bodyA.node?.name == "player" {
-        //            print("dead")
-        //        } else if contact.bodyB.node?.name == "player" {
-        //            print("dead")
-        //        }
-        //
-        //        if contact.bodyA.node?.name == "playerGraze" {
-        //            print("grazed")
-        //        } else if contact.bodyB.node?.name == "playerGraze" {
-        //            print("grazed")
-        //        }
-        
-//        print("\nbodyA: \(contact.bodyA.node?.name)\nbodyB: \(contact.bodyB.node?.name)")
-        
-//        if contact.bodyA.node?.name == "pBullet" || contact.bodyB.node?.name == "pBullet" {
-//            print("testing\nbodyA: \(contact.bodyA.node?.name)\nbodyB: \(contact.bodyB.node?.name)")
-//        }
-        
-//        if (contact.bodyA.node?.name == "eBullet" && contact.bodyB.node?.name == "player") ||
-//            (contact.bodyA.node?.name == "player" && contact.bodyB.node?.name == "eBullet") ||
-//            (contact.bodyA.node?.name == "enemy" && contact.bodyB.node?.name == "player") ||
-//            (contact.bodyA.node?.name == "player" && contact.bodyB.node?.name == "enemy"){
-//            print("dead")
-//        }
-//
-//        if (contact.bodyA.node?.name == "eBullet" && contact.bodyB.node?.name == "playerGraze") ||
-//            (contact.bodyA.node?.name == "playerGraze" && contact.bodyB.node?.name == "eBullet") {
-//            print("grazed")
-//        }
-//
-//        if (contact.bodyA.categoryBitMask == Bitmasks.pBullet.rawValue
-//            && contact.bodyB.categoryBitMask == Bitmasks.enemy.rawValue) ||
-//            (contact.bodyA.categoryBitMask == Bitmasks.enemy.rawValue
-//             && contact.bodyB.categoryBitMask == Bitmasks.pBullet.rawValue) {
-//            print("hit an enemy")
-//        }
+        DispatchQueue.main.async {
+            if contact.bodyA.categoryBitMask == Bitmasks.player.rawValue ||
+                contact.bodyB.categoryBitMask == Bitmasks.player.rawValue {
+                self.score - 1500 <= 0 ? (self.score = 0) : (self.score -= 1500)
+                self.player.gotHit()
+            }
+        }
         
         DispatchQueue.main.async {
             if contact.bodyA.categoryBitMask == Bitmasks.eBullet.rawValue {
                 if contact.bodyB.categoryBitMask == Bitmasks.playerGraze.rawValue {
                     self.graze += 1
                     self.score += 10
-                    
+                    self.run(.playSoundFileNamed("graze.mp3", waitForCompletion: false))
                     return
                 }
             } else if contact.bodyB.categoryBitMask == Bitmasks.eBullet.rawValue {
                 if contact.bodyA.categoryBitMask == Bitmasks.playerGraze.rawValue {
                     self.graze += 1
                     self.score += 10
-                    
+                    self.run(.playSoundFileNamed("graze.mp3", waitForCompletion: false))
                     return
                 }
             }
@@ -260,7 +234,8 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                 if let boss = contact.bodyB.node as? Boss {
                     if boss.canTakeDamage {
                         boss.health -= 1
-                        self.score += 15
+                        self.score += 25
+                        boss.run(.playSoundFileNamed("hit.mp3", waitForCompletion: false))
                     }
                     
                 }
@@ -284,8 +259,11 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                 }
                 
                 if let boss = contact.bodyA.node as? Boss {
-                    boss.health -= 1
-                    self.score += 15
+                    if boss.canTakeDamage {
+                        boss.health -= 1
+                        self.score += 25
+                        boss.run(.playSoundFileNamed("hit.mp3", waitForCompletion: false))
+                    }
                     
                     return
                 }
@@ -293,7 +271,18 @@ class DevLevel: DevLevelDesign, SKPhysicsContactDelegate {
                 return
             }
         }
+    }
+    
+    func saveScore() {
+        let uD = UserDefaults.standard
+        self.topScore = uD.integer(forKey: "highScore")
         
+        uD.set(self.score, forKey: "currentAttemptScore")
         
+        if self.topScore < self.score {
+            uD.set(self.score, forKey: "highScore")
+        }
+        
+        uD.set(true, forKey: "gameHasBeenPlayed")
     }
 }

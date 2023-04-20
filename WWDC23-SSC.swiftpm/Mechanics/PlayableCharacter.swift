@@ -10,18 +10,21 @@ import SpriteKit
 
 class PlayableCharacter: SKSpriteNode {
     let atlas: SKTextureAtlas = SKTextureAtlas(named: "PlayableCharacter")
-    let hitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 5)
+    let hitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 3.5)
     let visualHitbox: SKShapeNode = SKShapeNode(circleOfRadius: 5)
     let graze: SKNode = SKNode()
-    let grazeHitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 25)
+    let grazeHitbox: SKPhysicsBody = SKPhysicsBody(circleOfRadius: 27.5)
+    
+    let bulletSfx: SKAction = .playSoundFileNamed("shoot.mp3", waitForCompletion: false)
+    let tookHitSfx: SKAction = .playSoundFileNamed("gotHit.mp3", waitForCompletion: false)
     
     var spawners: [BulletSpawner] = []
-    
     var isBeingControlled: Bool
+    var hasTookDamage: Bool
     
     init() {
         self.isBeingControlled = false
-//        self.hitbox.isDynamic = false
+        self.hasTookDamage = false
         self.hitbox.allowsRotation = false
         self.hitbox.affectedByGravity = false
         self.hitbox.collisionBitMask = Bitmasks.nothing.rawValue
@@ -47,6 +50,10 @@ class PlayableCharacter: SKSpriteNode {
         self.grazeHitbox.contactTestBitMask = Bitmasks.eBullet.rawValue
         self.grazeHitbox.categoryBitMask = Bitmasks.playerGraze.rawValue
         self.graze.physicsBody = self.grazeHitbox
+        
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {_ in
+            self.run(self.bulletSfx)
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -73,6 +80,30 @@ class PlayableCharacter: SKSpriteNode {
         makePlayerPosAccessible()
     }
     
+    func gotHit() {
+        let normalFireRate = 3
+        if hasTookDamage { return }
+        
+        self.run(self.tookHitSfx)
+        self.physicsBody = nil
+        self.graze.removeFromParent()
+        for spawner in spawners {
+            spawner.fireRate = 9
+        }
+        hasTookDamage = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            self.physicsBody = self.hitbox
+            if self.graze.parent == nil { self.addChild(self.graze) }
+            for spawner in self.spawners {
+                spawner.fireRate = normalFireRate
+            }
+            self.hasTookDamage = false
+        }
+        
+        self.run(.repeat(.sequence([.fadeOut(withDuration: 0.25), .fadeIn(withDuration: 0.25)]), count: 6))
+    }
+    
     func makePlayerPosAccessible() {
         if self.position.y > 450 { self.run(.moveTo(y: 400, duration: 0.25))}
         if self.position.y < -450 { self.run(.moveTo(y: -400, duration: 0.25))}
@@ -81,7 +112,7 @@ class PlayableCharacter: SKSpriteNode {
     }
     
     func initalizeSpawners(bullets: SKTextureAtlas) {
-        let mainSpawner = BulletSpawner(config: BulletSpawnerConfigs(texture: bullets.textureNamed("bulletDart"),
+        let mainSpawner = BulletSpawner(config: BulletSpawnerConfigs(texture: TextureManager.fetchTexture(for: .BulletDart),
                                                                      spriteSpin: .none,
                                                                      ownerisPlayer: true,
                                                                      patternArrays: 1,
@@ -102,7 +133,7 @@ class PlayableCharacter: SKSpriteNode {
                                                                      bulletTTL: 5))
 
         
-        let starSpawner = BulletSpawner(config: BulletSpawnerConfigs(texture: bullets.textureNamed("bulletStar"),
+        let starSpawner = BulletSpawner(config: BulletSpawnerConfigs(texture: TextureManager.fetchTexture(for: .BulletStar),
                                                                      spriteSpin: .clockwise,
                                                                      ownerisPlayer: true,
                                                                      patternArrays: 1,

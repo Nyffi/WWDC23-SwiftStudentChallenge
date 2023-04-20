@@ -12,7 +12,6 @@ enum Bitmasks: UInt32 {
     case playerGraze = 0b10
     case enemy = 0b100
     
-//    case bullet = 0b10000000
     case pBullet = 0b1000
     case eBullet = 0b10000
     

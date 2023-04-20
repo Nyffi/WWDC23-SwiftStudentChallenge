@@ -14,8 +14,8 @@
             filePath = "Mechanics/PlayableCharacter.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "84"
-            endingLineNumber = "84"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
             landmarkName = "initalizeSpawners(bullets:)"
             landmarkType = "7">
             <Locations>

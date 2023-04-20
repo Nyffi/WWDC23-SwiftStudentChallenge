@@ -8,7 +8,7 @@
 import Foundation
 import SpriteKit
 
-class BulletSpawner: SKNode, Scriptable {
+class BulletSpawner: SKNode {
     let texture: SKTexture
     var spriteSpin: SKAction?
     let ownerisPlayer: Bool
