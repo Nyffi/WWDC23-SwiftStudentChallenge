@@ -24,5 +24,7 @@ I believe that games have a huge potential of being used for educational and tra
 - IM Fell Types by Igino Marine
 
 Forest asset used in the Main Menu was obtained from FreePik.
-Forest asset used as background in-game was obtained from PNGTree
-Sound effects were obtained from YouTube Audio Library
+
+Forest asset used as background in-game was obtained from PNGTree.
+
+Sound effects were obtained from YouTube Audio Library.
